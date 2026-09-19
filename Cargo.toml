@@ -16,8 +16,7 @@ ignored = []
 plat = "0.9"
 
 mnomer = { git = "https://github.com/VladasZ/mnomer", rev = "098e103fe9698af7498bf4a136b81f8f4cc816fa" }
-hilen = { git = "https://github.com/hilen/hilen.git", rev = "98b51311" }
-#hilen = { path = "../../hilen/hilen" }
+hilen = { git = "https://github.com/hilen/hilen.git", rev = "66bd4e8a5c5f9613d959ac88d33766eccf49f19f" }
 
 nome = { path = "nome" }
 

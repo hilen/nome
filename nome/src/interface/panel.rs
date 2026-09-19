@@ -1,6 +1,7 @@
 use hilen::{
     Event,
     refs::Weak,
+    system::AppActivity,
     ui::{Button, Label, Setup, UIColor, ViewData, view},
 };
 
@@ -12,9 +13,9 @@ use crate::{interface::tempo_controls::TempoControls, metronome::Metronome};
 /// live in one place and cannot drift apart from each other.
 #[view]
 pub struct ControlPanel {
-    /// Fires after Start is pressed, either way. A running beat reports itself
-    /// through `on_beat`, so this exists for the screen to clear itself when
-    /// the beat has just been stopped.
+    /// Fires after playback changes, including background stops. A running beat
+    /// reports itself through `on_beat`, so this exists for the screen to
+    /// clear itself when the beat has just been stopped.
     pub toggled: Event<()>,
 
     #[educe(Default = Metronome::default())]
@@ -66,6 +67,14 @@ impl ControlPanel {
 
 impl Setup for ControlPanel {
     fn setup(mut self: Weak<Self>) {
+        AppActivity::changed().val(self, move |active| {
+            if !active && self.metronome.is_playing() {
+                self.metronome.stop();
+                self.refresh();
+                self.toggled.trigger(());
+            }
+        });
+
         self.tempo.set_text_size(46).place().fit_text().center_x().t(0);
 
         self.controls.place().lr(0).t(58).h(44);

@@ -1,3 +1,4 @@
+use hilen::system::ScreenAwake;
 use mnomer::{
     BeatPattern, BeatPatternType, BeatPlayer, ToneConfiguration,
     frequency_relative_semitone_equal_temperament,
@@ -14,15 +15,17 @@ const ACCENT_SEMITONES: f64 = 5.0;
 
 /// One working metronome, owning its own player so nothing is shared.
 pub struct Metronome {
-    player: BeatPlayer,
-    bpm:    u16,
+    player:       BeatPlayer,
+    bpm:          u16,
+    screen_awake: Option<ScreenAwake>,
 }
 
 impl Default for Metronome {
     fn default() -> Self {
         Self {
-            player: make_player(),
-            bpm:    START_BPM,
+            player:       make_player(),
+            bpm:          START_BPM,
+            screen_awake: None,
         }
     }
 }
@@ -55,10 +58,22 @@ impl Metronome {
 
     pub fn toggle(&mut self) {
         if self.is_playing() {
-            self.player.stop();
+            self.stop();
         } else {
             self.player.play_beat().expect("failed to start the beat");
+            self.screen_awake = Some(ScreenAwake::acquire());
         }
+    }
+
+    pub fn stop(&mut self) {
+        self.player.stop();
+        self.screen_awake = None;
+    }
+}
+
+impl Drop for Metronome {
+    fn drop(&mut self) {
+        self.stop();
     }
 }
 

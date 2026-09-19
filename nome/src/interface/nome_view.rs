@@ -39,7 +39,11 @@ impl Setup for NomeView {
         // comes off the same clock as the click and cannot drift from it.
         // Views are main thread only, hence the hop.
         self.panel.on_beat(move |beat| {
-            on_main(move || self.light(beat));
+            on_main(move || {
+                if self.is_ok() && self.panel.is_playing() {
+                    self.light(beat);
+                }
+            });
         });
 
         self.panel.toggled.val(move |()| {
