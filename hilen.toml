@@ -1,3 +1,4 @@
 bundle_id = "vladas.nome"
 project_name = "nome"
 version = "1.1"
+ios_minimum_version = "13.0"
