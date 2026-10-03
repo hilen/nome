@@ -16,17 +16,16 @@ env:
 jobs:
   quality:
     name: Code Quality
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, tc]
     steps:
       - uses: actions/checkout@v5
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake pkg-config libssl-dev xorg-dev libasound2-dev
+      - name: Add the NixOS tool folders to PATH
+        if: runner.os == 'Linux'
+        run: echo "/run/current-system/sw/bin" >> "$GITHUB_PATH"
 
       - name: Install quality tools
         uses: taiki-e/install-action@v2
@@ -42,25 +41,25 @@ jobs:
       fail-fast: false
       matrix:
         target: [
-            { os: macos, runner: macos-latest },
-            { os: windows, runner: windows-latest },
+            { os: macos, runner: mac },
+            { os: windows, runner: windows },
 
-            { os: ios, runner: mac },
-            { os: android, runner: ubuntu-latest },
+            { os: ios, runner: mac1 },
+            { os: android, runner: tc },
           ]
-    runs-on: ${{ matrix.target.runner }}
+    runs-on: [self-hosted, "${{ matrix.target.runner }}"]
     steps:
       - uses: actions/checkout@v5
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
+      - name: Add the NixOS tool folders to PATH
+        if: runner.os == 'Linux'
+        run: echo "/run/current-system/sw/bin" >> "$GITHUB_PATH"
+
       - name: Setup rustscript
         uses: VladasZ/rustscript@v0.1
-
-      - name: Free Space
-        if: ${{ matrix.target.os != 'windows' }}
-        run: rust build/scripts/free_action_runner.rs
 
       - name: Build and test
         if: ${{ matrix.target.os != 'windows' }}
@@ -84,18 +83,19 @@ jobs:
             { container: "amazonlinux" },
             { container: "dockerscripts/linuxmint:cinnamon-minimal" },
           ]
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, tc]
     steps:
       - uses: actions/checkout@v5
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           submodules: recursive
 
+      - name: Add the NixOS tool folders to PATH
+        if: runner.os == 'Linux'
+        run: echo "/run/current-system/sw/bin" >> "$GITHUB_PATH"
+
       - name: Setup rustscript
         uses: VladasZ/rustscript@v0.1
-
-      - name: Free Space
-        run: rust build/scripts/free_action_runner.rs
 
       - name: Build
         run: echo ${{ matrix.target.container }} && rust build/in_docker.rs ${{ matrix.target.container }}
