@@ -1,7 +1,6 @@
 use hilen::{
-    dispatch::on_main,
     refs::Weak,
-    ui::{Container, Setup, UIManager, ViewData, ViewSubviews, view},
+    ui::{Container, LoopAnimation, Setup, UIManager, ViewData, ViewSubviews, view},
 };
 
 use crate::{interface::panel::ControlPanel, metronome::BEATS};
@@ -35,22 +34,7 @@ impl Setup for NomeView {
             self.cells.push(cell);
         }
 
-        // The player reports each beat from the audio thread, so the light
-        // comes off the same clock as the click and cannot drift from it.
-        // Views are main thread only, hence the hop.
-        self.panel.on_beat(move |beat| {
-            on_main(move || {
-                if self.is_ok() && self.panel.is_playing() {
-                    self.light(beat);
-                }
-            });
-        });
-
-        self.panel.toggled.val(move |()| {
-            if !self.panel.is_playing() {
-                self.clear();
-            }
-        });
+        self.panel.changed.val(move |()| self.follow());
 
         self.panel.set_palette(DIM, TEXT, BEAT, BACKGROUND, 10.0);
         self.panel.place().lrb(16).h(ControlPanel::HEIGHT);
@@ -58,6 +42,29 @@ impl Setup for NomeView {
 }
 
 impl NomeView {
+    /// The light is a declared loop of 1 bar, so on Apple platforms Core
+    /// Animation shows it and the app sleeps between beats. It starts at the
+    /// phase of the sound clock, again after every change of the tempo.
+    fn follow(self: Weak<Self>) {
+        if !self.panel.is_playing() {
+            self.field.stop_loop();
+            self.clear();
+            return;
+        }
+
+        let quarters = (1..BEATS).map(|beat| f32::from(beat) / f32::from(BEATS));
+        let pose = move |phase: f32| {
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+            let beat = (phase * f32::from(BEATS)) as usize;
+            self.light(beat.min(usize::from(BEATS) - 1));
+        };
+        self.field.run_loop(
+            LoopAnimation::new(self.panel.bar_seconds(), pose)
+                .changes_at(quarters)
+                .starting_at(self.panel.bar_phase()),
+        );
+    }
+
     fn light(self: Weak<Self>, beat: usize) {
         for (index, cell) in self.cells.iter().enumerate() {
             let color = if index != beat {

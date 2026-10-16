@@ -13,10 +13,11 @@ version = "0.1.0"
 ignored = []
 
 [workspace.dependencies]
+log = "0.4"
 plat = "0.9"
+serde = { version = "1", features = ["derive"] }
 
-mnomer = { git = "https://github.com/VladasZ/mnomer", rev = "098e103fe9698af7498bf4a136b81f8f4cc816fa" }
-hilen = { git = "https://github.com/hilen/hilen.git", rev = "53341065c43aa119d39611e4e6e6cf4ed2bbf6b2" }
+hilen = { git = "https://github.com/hilen/hilen.git", rev = "6f961029e21f80165ed7eabcb62ac38af321793d", features = ["audio"] }
 
 nome = { path = "nome" }
 

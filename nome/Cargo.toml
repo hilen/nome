@@ -12,8 +12,9 @@ crate-type = ["rlib", "staticlib"]
 name = "nome"
 
 [dependencies]
-mnomer = { workspace = true }
 hilen = { workspace = true }
+log = { workspace = true }
+serde = { workspace = true }
 
 [build-dependencies]
 plat = { workspace = true }
